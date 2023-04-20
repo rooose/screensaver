@@ -30,10 +30,16 @@ struct Vertex {
     }
 };
 
+constexpr glm::vec3 BASE_COLOR = { 0.75f, 0.75f, 1.0f };
+
 const std::vector<Vertex> vertices = {
-    {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    {{-1.0f, -1.0f}, BASE_COLOR}, // p1
+    {{1.0f, -1.0f}, BASE_COLOR},  // p2
+    {{1.0f, 1.0f}, BASE_COLOR},   // p3
+
+    {{-1.0f, -1.0f}, BASE_COLOR},   // p1
+    {{1.0f, 1.0f}, BASE_COLOR},    // p3
+    {{-1.0f, 1.0f}, BASE_COLOR},   // p4
 };
 
 // callbacks
@@ -97,14 +103,17 @@ void VulkanApp::initWindow() {
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    glfwWindowHint(GLFW_DECORATED, NULL); // remove border + title bar
-
-    GLFWmonitor* MyMonitor = glfwGetPrimaryMonitor();
-
-    const GLFWvidmode* mode = glfwGetVideoMode(MyMonitor);
-    auto SCR_WIDTH = mode->width;
-    auto SCR_HEIGHT = mode->height;
-    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Vulkan", nullptr, nullptr);
+    if (!WINDOWED) {
+        glfwWindowHint(GLFW_DECORATED, NULL); // remove border + title bar
+        GLFWmonitor* MyMonitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(MyMonitor);
+        auto SCR_WIDTH = mode->width;
+        auto SCR_HEIGHT = mode->height;
+        window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Vulkan", nullptr, nullptr);
+    }
+    else {
+        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+    }
     // No need to handle resize bcs it's a screensaver
 }
 
@@ -1029,8 +1038,8 @@ void VulkanApp::mainLoop() {
         glfwPollEvents();
         drawFrame();
 
-        glfwSetKeyCallback(window, VulkanApp::keyboardPressedCallback);
-        glfwSetCursorPosCallback(window, VulkanApp::mouseMovedCallback);
+        //glfwSetKeyCallback(window, VulkanApp::keyboardPressedCallback);
+        //glfwSetCursorPosCallback(window, VulkanApp::mouseMovedCallback);
     }
 
     vkDeviceWaitIdle(device);

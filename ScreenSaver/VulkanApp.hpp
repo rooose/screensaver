@@ -22,9 +22,10 @@
 #include <array>
 
 // CONSTS
-constexpr uint32_t WIDTH = 800;
-constexpr uint32_t HEIGHT = 600;
-constexpr size_t MAX_FRAMES_IN_FLIGHT = 6; // How many frame are always generated (determines the swapchain size)
+constexpr size_t MAX_FRAMES_IN_FLIGHT = 2; // How many frame are always generated (determines the swapchain size)
+constexpr bool WINDOWED = true;
+constexpr int WIDTH = 800;
+constexpr int HEIGHT = 600;
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
