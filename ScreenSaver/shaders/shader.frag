@@ -1,5 +1,7 @@
 #version 450
 
+const int res = 5;
+
 struct FluidNoise {
     float noise;
 };
@@ -7,16 +9,19 @@ struct FluidNoise {
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec3 fragPos;
 
-layout(std140, binding = 2) readonly buffer NoiseSSBOIn {
+layout(std140, binding = 2) buffer NoiseSSBOOut {
    FluidNoise noiseIn[ ];
 };
 
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    vec2 st = fragPos.xy;
-    float rnd = 0;
+    int x = int(fragPos.x * res);
+    int y = int(fragPos.y * res);
 
-    float n = noiseIn[0].noise;
-    outColor = vec4(n,n,n,1.0);
+    int idx = int(y * res) + x;
+    float n = noiseIn[idx].noise;
+    outColor = vec4(n, n, n, 1.0);
+//    outColor = vec4(fragPos, 1.);
+//    outColor = vec4(noiseIn[(63 * 64) + 63].noise,0., 0., 1.);
 }

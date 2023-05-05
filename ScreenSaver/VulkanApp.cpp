@@ -106,7 +106,6 @@ void VulkanApp::run() {
     cleanup();
 }
 
-
 // INIT WINDOW +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 void VulkanApp::initWindow() {
     glfwInit();
@@ -892,7 +891,7 @@ void VulkanApp::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imag
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-    //vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &computeDescriptorSets[currentFrame], 0, nullptr);
     vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
     vkCmdEndRenderPass(commandBuffer);
@@ -914,7 +913,7 @@ void VulkanApp::recordComputeCommandBuffer(VkCommandBuffer commandBuffer) {
 
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePipelineLayout, 0, 1, &computeDescriptorSets[currentFrame], 0, nullptr);
 
-    vkCmdDispatch(commandBuffer, 64 * 64 / 256, 1, 1);
+    vkCmdDispatch(commandBuffer, RESOLUTION, 1, 1);
 
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to record compute command buffer!");
@@ -1039,7 +1038,7 @@ void VulkanApp::createDescriptorPool() {
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 2;
+    poolInfo.poolSizeCount = poolSizes.size();
     poolInfo.pPoolSizes = poolSizes.data();
     poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
@@ -1107,7 +1106,7 @@ void VulkanApp::createComputeDescriptorSets() {
         VkDescriptorBufferInfo storageBufferInfoLastFrame{};
         storageBufferInfoLastFrame.buffer = shaderStorageBuffers[(i - 1) % MAX_FRAMES_IN_FLIGHT];
         storageBufferInfoLastFrame.offset = 0;
-        storageBufferInfoLastFrame.range = sizeof(FluidNoise) * 64 * 64;
+        storageBufferInfoLastFrame.range = sizeof(FluidNoise) * RESOLUTION * RESOLUTION;
 
         descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[1].dstSet = computeDescriptorSets[i];
@@ -1120,7 +1119,7 @@ void VulkanApp::createComputeDescriptorSets() {
         VkDescriptorBufferInfo storageBufferInfoCurrentFrame{};
         storageBufferInfoCurrentFrame.buffer = shaderStorageBuffers[i];
         storageBufferInfoCurrentFrame.offset = 0;
-        storageBufferInfoCurrentFrame.range = sizeof(FluidNoise) * 64 * 64;
+        storageBufferInfoCurrentFrame.range = sizeof(FluidNoise) * RESOLUTION * RESOLUTION;
 
         descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[2].dstSet = computeDescriptorSets[i];
@@ -1144,7 +1143,6 @@ void VulkanApp::initVulkan() {
     createSwapChain();
     createImageViews();
     createRenderPass();
-    createDescriptorSetLayout();
     createComputeDescriptorSetLayout();
     createGraphicsPipeline();
     createComputePipeline();
@@ -1154,7 +1152,6 @@ void VulkanApp::initVulkan() {
     createShaderStorageBuffers();
     createUniformBuffers();
     createDescriptorPool();
-    //createDescriptorSets();
     createComputeDescriptorSets();
     createCommandBuffers();
     createComputeCommandBuffers();
@@ -1275,19 +1272,14 @@ void VulkanApp::createVertexBuffer() {
 }
 
 void VulkanApp::createShaderStorageBuffers() {
-    VkDeviceSize bufferSize = sizeof(FluidNoise) * 64 * 64;
-
-    std::default_random_engine rndEngine((unsigned)time(nullptr));
-    std::uniform_real_distribution<float> rndDist(0.0f, 1.0f);
+    VkDeviceSize bufferSize = sizeof(FluidNoise) * RESOLUTION * RESOLUTION;
 
     // fill with random noise
-    std::vector<FluidNoise> noise(64 * 64);
-    for (int i = 0; i < 64; i++) {
-        for (int j = 0; j < 64; j++) {
-            noise[j * 64 + i] = FluidNoise{
-                0
-            };
-        }
+    std::vector<FluidNoise> noise(RESOLUTION * RESOLUTION);
+    for (int i = 0; i < (RESOLUTION * RESOLUTION); i++) {
+        noise[i] = FluidNoise{
+            0.2f
+        };
     }
 
     VkBuffer stagingBuffer = nullptr;
@@ -1304,7 +1296,7 @@ void VulkanApp::createShaderStorageBuffers() {
 
     // Copy initial noise data to all storage buffers
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        createBuffer(bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, shaderStorageBuffers[i], shaderStorageBuffersMemory[i]);
+        createBuffer(bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, shaderStorageBuffers[i], shaderStorageBuffersMemory[i]);
         copyBuffer(stagingBuffer, shaderStorageBuffers[i], bufferSize);
     }
 
@@ -1446,7 +1438,7 @@ void VulkanApp::cleanup() {
     }
 
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
-    vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+    vkDestroyDescriptorSetLayout(device, computeDescriptorSetLayout, nullptr);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroyBuffer(device, shaderStorageBuffers[i], nullptr);

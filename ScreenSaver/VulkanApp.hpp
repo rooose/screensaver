@@ -24,8 +24,10 @@
 // CONSTS
 constexpr size_t MAX_FRAMES_IN_FLIGHT = 2; // How many frame are always generated (determines the swapchain size)
 constexpr bool WINDOWED = true;
-constexpr int WIDTH = 800;
-constexpr int HEIGHT = 600;
+constexpr size_t WIDTH = 800;
+constexpr size_t HEIGHT = 600;
+constexpr size_t RESOLUTION = 5;
+
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
