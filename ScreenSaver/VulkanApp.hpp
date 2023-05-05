@@ -71,6 +71,7 @@ private:
     VkDevice device;
 
     VkQueue graphicsQueue;
+    VkQueue computeQueue;
     VkQueue presentQueue;
 
     VkSwapchainKHR swapChain;
@@ -84,13 +85,23 @@ private:
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
 
+    VkDescriptorSetLayout computeDescriptorSetLayout;
+    VkPipelineLayout computePipelineLayout;
+    VkPipeline computePipeline;
+
+
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkCommandPool commandPool;
+
     std::vector<VkCommandBuffer> commandBuffers;
+    std::vector<VkCommandBuffer> computeCommandBuffers;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkSemaphore> computeFinishedSemaphores;
+
     std::vector<VkFence> inFlightFences;
+    std::vector<VkFence> computeInFlightFences;
 
     bool framebufferResized = false;
     uint32_t currentFrame = 0;
@@ -98,11 +109,15 @@ private:
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
 
+    std::vector<VkBuffer> shaderStorageBuffers;
+    std::vector<VkDeviceMemory> shaderStorageBuffersMemory;
+
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
     std::vector<void*> uniformBuffersMapped;
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
+    std::vector<VkDescriptorSet> computeDescriptorSets;
 
     // functions
 public:
@@ -138,22 +153,28 @@ private:
 
     VkShaderModule createShaderModule(const std::vector<char>& code);
     void createGraphicsPipeline();
+    void createComputePipeline();
 
     void createRenderPass();
 
     void createFramebuffers();
 
     void createCommandPool();
+    void createComputeCommandBuffers();
     void createCommandBuffers();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+
+    void recordComputeCommandBuffer(VkCommandBuffer commandBuffer);
 
     void createSyncObjects();
 
     void createDescriptorSetLayout();
+    void createComputeDescriptorSetLayout();
     void createUniformBuffers();
     void updateUniformBuffer(uint32_t currentImage);
     void createDescriptorPool();
     void createDescriptorSets();
+    void createComputeDescriptorSets();
 
     void initVulkan();
 
@@ -162,6 +183,7 @@ private:
 
     void createBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMem);
     void createVertexBuffer();
+    void createShaderStorageBuffers();
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
