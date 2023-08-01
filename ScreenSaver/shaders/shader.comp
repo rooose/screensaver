@@ -1,7 +1,5 @@
 #version 450
 
-const int res = 5;
-
 struct FluidNoise {
     float noise;
 };
@@ -11,18 +9,23 @@ layout (binding = 0) uniform ParameterUBO {
 } ubo;
 
 layout(std140, binding = 1) readonly buffer NoiseSSBOIn {
-   FluidNoise noiseIn[ ];
+   FluidNoise noiseIn[ ]; // local_size_y X local_size_x
 };
 
 layout(std140, binding = 2) buffer NoiseSSBOOut {
-   FluidNoise noiseOut[ ];
+   FluidNoise noiseOut[ ]; // local_size_y X local_size_x
 };
 
-layout (local_size_x = res, local_size_y = 1, local_size_z = 1) in;
+// local_size_n = work group size = number of items in work group ( = 64)
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 void main() 
 {
-    uint index = gl_GlobalInvocationID.x;
-    FluidNoise currNoise = noiseIn[index];
-    noiseOut[index].noise = 1.;
+    // gl_GlobalInvocationID.x = [0, 7]
+    // gl_GlobalInvocationID.y = [0, 7]
+    // gl_NumWorkGroups.x = 1
+    // gl_WorkGroupSize.x = 8
+    // equivalent a: x + (y * length)
+    uint idx = gl_GlobalInvocationID.x + (gl_GlobalInvocationID.y * gl_NumWorkGroups.x * gl_WorkGroupSize.x); // Sascha Willems style
+    noiseOut[idx].noise = 1 - noiseIn[idx].noise;
 }

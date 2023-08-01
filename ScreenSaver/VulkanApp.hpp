@@ -26,7 +26,7 @@ constexpr size_t MAX_FRAMES_IN_FLIGHT = 2; // How many frame are always generate
 constexpr bool WINDOWED = true;
 constexpr size_t WIDTH = 800;
 constexpr size_t HEIGHT = 600;
-constexpr size_t RESOLUTION = 5;
+constexpr size_t RESOLUTION = 16;
 
 
 #ifdef NDEBUG
@@ -40,7 +40,8 @@ const std::vector<const char*> validationLayers = {
 };
 
 const std::vector<const char*> deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    //VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME
 };
 
 // STRUCTS
@@ -192,5 +193,4 @@ private:
     void drawFrame();
     void mainLoop();
     void cleanup();
-
 };

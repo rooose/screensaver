@@ -913,12 +913,15 @@ void VulkanApp::recordComputeCommandBuffer(VkCommandBuffer commandBuffer) {
 
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, computePipelineLayout, 0, 1, &computeDescriptorSets[currentFrame], 0, nullptr);
 
-    vkCmdDispatch(commandBuffer, RESOLUTION, 1, 1);
+
+    int numberWorkGroups_X = int(ceil(RESOLUTION / 8.0f)); // NUM RES / ITEMS PER WORK GROUP (=8 - from the shader)
+    int numberWorkGroups_Y = int(ceil(RESOLUTION / 8.0f));
+    vkCmdDispatch(commandBuffer, numberWorkGroups_X, numberWorkGroups_Y, 1);
+    //vkCmdDispatch(commandBuffer, RESOLUTION, RESOLUTION, 1.0f);
 
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to record compute command buffer!");
     }
-
 }
 
 // SYNCHRONIZATION OBJECTS +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
@@ -1272,16 +1275,20 @@ void VulkanApp::createVertexBuffer() {
 }
 
 void VulkanApp::createShaderStorageBuffers() {
-    VkDeviceSize bufferSize = sizeof(FluidNoise) * RESOLUTION * RESOLUTION;
-
     // fill with random noise
     std::vector<FluidNoise> noise(RESOLUTION * RESOLUTION);
-    for (int i = 0; i < (RESOLUTION * RESOLUTION); i++) {
-        noise[i] = FluidNoise{
-            0.2f
-        };
+
+    for (int y = 0; y < (RESOLUTION); ++y) {
+        for (int x = 0; x < (RESOLUTION); ++x) {
+
+            int idx = (y * RESOLUTION) + x;
+            noise[idx] = FluidNoise{
+                0.1f //idx / (RESOLUTION * RESOLUTION - 1.0f)
+            };
+        }
     }
 
+    VkDeviceSize bufferSize = sizeof(noise[0]) * noise.size();
     VkBuffer stagingBuffer = nullptr;
     VkDeviceMemory stagingBufferMemory = nullptr;
     createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);

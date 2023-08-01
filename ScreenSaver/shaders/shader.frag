@@ -1,6 +1,6 @@
 #version 450
 
-const int res = 5;
+const int res = 8;
 
 struct FluidNoise {
     float noise;
@@ -19,9 +19,8 @@ void main() {
     int x = int(fragPos.x * res);
     int y = int(fragPos.y * res);
 
-    int idx = int(y * res) + x;
+    int idx = (y * res + x);
     float n = noiseIn[idx].noise;
-    outColor = vec4(n, n, n, 1.0);
-//    outColor = vec4(fragPos, 1.);
-//    outColor = vec4(noiseIn[(63 * 64) + 63].noise,0., 0., 1.);
+
+    outColor = vec4(n, n, n , 1.0);
 }
