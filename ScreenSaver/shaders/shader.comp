@@ -1,7 +1,7 @@
 #version 450
 
 const float PI = 3.14159;
-const float res = 256;
+const float res = 1024;
 
 struct FluidNoise {
     float noise;
@@ -48,18 +48,14 @@ void main()
     int x_int = int(gl_GlobalInvocationID.x) + int(map[rand_idx].x);
     int y_int = (int(gl_GlobalInvocationID.y) + int(map[rand_idx].y)) * int(gl_NumWorkGroups.x * gl_WorkGroupSize.x);
 
-    float tau = 1;
-
-    noiseOut[idx].noise = tau * noiseIn[x_int + y_int].noise + (1 - tau) * noiseIn[idx].noise;
-
-
+    if (x_int == 0 || x_int == res - 1 || y_int == 0 || y_int == res - 1) {
+        noiseOut[idx].noise = noiseIn[idx].noise;
+    } else {
+        noiseOut[idx].noise = noiseIn[x_int + y_int].noise;
+    }
 
     //vec2 pos = vec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y * gl_NumWorkGroups.x * gl_WorkGroupSize.x);
     //float n = pNoise(gl_GlobalInvocationID.xy, 100);
     //float r = pow(x,2) + pow(y,2);
-    //noiseOut[idx].noise = sin(10.*r - ubo.deltaTime);
-
-
-
-      
+    //noiseOut[idx].noise = sin(10.*r - ubo.deltaTime
 }

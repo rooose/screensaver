@@ -1,6 +1,6 @@
 #version 450
 
-const int res = 256;
+const int res = 1024;
 
 struct FluidNoise {
     float noise;
@@ -37,6 +37,5 @@ void main() {
 
     float n = tl * (1-delta_x) * (1-delta_y) + tr * delta_x * (1-delta_y) + bl * (1-delta_x) * delta_y + br * delta_x * delta_y;
 
-    //float n = getNoise(x,y);
     outColor = vec4(n, n, n, 1.0);
 }
