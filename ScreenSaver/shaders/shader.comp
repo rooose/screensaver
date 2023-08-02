@@ -1,7 +1,7 @@
 #version 450
 
 const float PI = 3.14159;
-const float res = 512;
+const float res = 256;
 
 struct FluidNoise {
     float noise;
@@ -22,6 +22,11 @@ layout(std140, binding = 2) buffer NoiseSSBOOut {
 // local_size_n = work group size = number of items in work group ( = 64)
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
+float random (vec2 st) {
+    return fract(sin(ubo.deltaTime * dot(st.xy,
+                         vec2(12.9898,78.233)))*
+                        43758.5453123);
+}
 
 void main()
 {
@@ -31,11 +36,30 @@ void main()
     // gl_WorkGroupSize.x = 8 * 8 * 1
     // equivalent a: x + (y * length)
 
-    float x = gl_GlobalInvocationID.x / (res - 1) - 0.5;
-    float y = gl_GlobalInvocationID.y/ (res - 1) - 0.5;
+//    float x = gl_GlobalInvocationID.x / (res - 1) - 0.5;
+//    float y = gl_GlobalInvocationID.y/ (res - 1) - 0.5;
     uint idx = gl_GlobalInvocationID.x + (gl_GlobalInvocationID.y * gl_NumWorkGroups.x * gl_WorkGroupSize.x); // Sascha Willems style
+    int rand_idx = int(9 * random(gl_GlobalInvocationID.xy));
+
+    vec2 map[9] = { vec2(-1, -1), vec2(-1, 0), vec2(-1, 1),
+                    vec2(0, -1), vec2(0, 0), vec2(0, 1),
+                    vec2(1, -1), vec2(1, 0), vec2(1, 1)};
+
+    int x_int = int(gl_GlobalInvocationID.x) + int(map[rand_idx].x);
+    int y_int = (int(gl_GlobalInvocationID.y) + int(map[rand_idx].y)) * int(gl_NumWorkGroups.x * gl_WorkGroupSize.x);
+
+    float tau = 1;
+
+    noiseOut[idx].noise = tau * noiseIn[x_int + y_int].noise + (1 - tau) * noiseIn[idx].noise;
+
+
+
     //vec2 pos = vec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y * gl_NumWorkGroups.x * gl_WorkGroupSize.x);
     //float n = pNoise(gl_GlobalInvocationID.xy, 100);
-    float r = pow(x,2) + pow(y,2);
-    noiseOut[idx].noise = sin(10.*r - ubo.deltaTime);
+    //float r = pow(x,2) + pow(y,2);
+    //noiseOut[idx].noise = sin(10.*r - ubo.deltaTime);
+
+
+
+      
 }

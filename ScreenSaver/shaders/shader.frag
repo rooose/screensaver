@@ -1,6 +1,6 @@
 #version 450
 
-const int res = 512;
+const int res = 256;
 
 struct FluidNoise {
     float noise;

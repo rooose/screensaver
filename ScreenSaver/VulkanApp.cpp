@@ -1281,9 +1281,9 @@ void VulkanApp::createShaderStorageBuffers() {
     for (int y = 0; y < (RESOLUTION); ++y) {
         for (int x = 0; x < (RESOLUTION); ++x) {
 
-            int idx = (y * RESOLUTION) + x;
+            float idx = (y * RESOLUTION) + x;
             noise[idx] = FluidNoise{
-                1
+                idx / (RESOLUTION * RESOLUTION)
             };
         }
     }
