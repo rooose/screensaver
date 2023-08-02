@@ -1,5 +1,8 @@
 #version 450
 
+const float PI = 3.14159;
+const float res = 512;
+
 struct FluidNoise {
     float noise;
 };
@@ -19,13 +22,20 @@ layout(std140, binding = 2) buffer NoiseSSBOOut {
 // local_size_n = work group size = number of items in work group ( = 64)
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-void main() 
+
+void main()
 {
-    // gl_GlobalInvocationID.x = [0, 7]
-    // gl_GlobalInvocationID.y = [0, 7]
-    // gl_NumWorkGroups.x = 1
-    // gl_WorkGroupSize.x = 8
+    // gl_GlobalInvocationID.x = [0, res - 1]
+    // gl_GlobalInvocationID.y = [0, res - 1]
+    // gl_NumWorkGroups.x = res * res / work group size
+    // gl_WorkGroupSize.x = 8 * 8 * 1
     // equivalent a: x + (y * length)
+
+    float x = gl_GlobalInvocationID.x / (res - 1) - 0.5;
+    float y = gl_GlobalInvocationID.y/ (res - 1) - 0.5;
     uint idx = gl_GlobalInvocationID.x + (gl_GlobalInvocationID.y * gl_NumWorkGroups.x * gl_WorkGroupSize.x); // Sascha Willems style
-    noiseOut[idx].noise = 1 - noiseIn[idx].noise;
+    //vec2 pos = vec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y * gl_NumWorkGroups.x * gl_WorkGroupSize.x);
+    //float n = pNoise(gl_GlobalInvocationID.xy, 100);
+    float r = pow(x,2) + pow(y,2);
+    noiseOut[idx].noise = sin(10.*r - ubo.deltaTime);
 }

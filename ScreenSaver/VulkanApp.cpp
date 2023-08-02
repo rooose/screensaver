@@ -6,8 +6,8 @@ struct UniformBufferObject {
     float time;
 };
 
-struct FluidNoise {
-    float noise;
+struct alignas(16) FluidNoise {
+    glm::float32_t noise;
 };
 
 struct Vertex {
@@ -1109,7 +1109,7 @@ void VulkanApp::createComputeDescriptorSets() {
         VkDescriptorBufferInfo storageBufferInfoLastFrame{};
         storageBufferInfoLastFrame.buffer = shaderStorageBuffers[(i - 1) % MAX_FRAMES_IN_FLIGHT];
         storageBufferInfoLastFrame.offset = 0;
-        storageBufferInfoLastFrame.range = sizeof(FluidNoise) * RESOLUTION * RESOLUTION;
+        storageBufferInfoLastFrame.range = RESOLUTION * RESOLUTION * sizeof(FluidNoise);
 
         descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[1].dstSet = computeDescriptorSets[i];
@@ -1122,7 +1122,7 @@ void VulkanApp::createComputeDescriptorSets() {
         VkDescriptorBufferInfo storageBufferInfoCurrentFrame{};
         storageBufferInfoCurrentFrame.buffer = shaderStorageBuffers[i];
         storageBufferInfoCurrentFrame.offset = 0;
-        storageBufferInfoCurrentFrame.range = sizeof(FluidNoise) * RESOLUTION * RESOLUTION;
+        storageBufferInfoCurrentFrame.range = RESOLUTION * RESOLUTION * sizeof(FluidNoise);
 
         descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[2].dstSet = computeDescriptorSets[i];
@@ -1283,12 +1283,13 @@ void VulkanApp::createShaderStorageBuffers() {
 
             int idx = (y * RESOLUTION) + x;
             noise[idx] = FluidNoise{
-                0.1f //idx / (RESOLUTION * RESOLUTION - 1.0f)
+                1
             };
         }
     }
 
-    VkDeviceSize bufferSize = sizeof(noise[0]) * noise.size();
+
+    VkDeviceSize bufferSize = sizeof(FluidNoise) * RESOLUTION * RESOLUTION;
     VkBuffer stagingBuffer = nullptr;
     VkDeviceMemory stagingBufferMemory = nullptr;
     createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
