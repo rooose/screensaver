@@ -8,6 +8,8 @@ struct UniformBufferObject {
 
 struct alignas(16) FluidNoise {
     glm::float32_t noise;
+    glm::vec2 gradient;
+    
 };
 
 struct Vertex {
@@ -1274,6 +1276,11 @@ void VulkanApp::createVertexBuffer() {
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
+float VulkanApp::getRandomGradient() {
+    const float pi = 3.14159;
+    return 2. * pi * (rand() % 289) / 41.;
+}
+
 void VulkanApp::createShaderStorageBuffers() {
     // fill with random noise
     std::vector<FluidNoise> noise(RESOLUTION * RESOLUTION);
@@ -1283,7 +1290,8 @@ void VulkanApp::createShaderStorageBuffers() {
 
             float idx = (y * RESOLUTION) + x;
             noise[idx] = FluidNoise{
-                idx / (RESOLUTION * RESOLUTION)
+                idx / (RESOLUTION * RESOLUTION),
+                glm::vec2(getRandomGradient(), getRandomGradient())
             };
         }
     }

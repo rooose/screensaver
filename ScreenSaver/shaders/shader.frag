@@ -4,6 +4,7 @@ const int res = 1024;
 
 struct FluidNoise {
     float noise;
+    vec2 gradient;
 };
 
 layout(location = 0) in vec3 fragColor;
@@ -23,6 +24,39 @@ float getNoise(int x, int y) {
      return noiseIn[getIdx(x,y)].noise;
 }
 
+vec3 COLORS[7] = vec3[](
+    vec3(0.996, 0.805, 0.281),
+    vec3(0.941, 0.098, 0.73),
+    vec3(0.52 , 0.   , 0.871),
+    vec3(0.   , 0.816, 0.949),
+    vec3(0.   , 0.559, 0.598),
+    vec3(0.   , 0.195, 0.309),
+    vec3(0.   , 0.043, 0.078));
+
+float WEIGHTS[7] = float[](
+    0.2,
+    0.1,
+    0.1,
+    0.2,
+    0.2,
+    0.1,
+    0.1);
+
+vec3 interpolate(vec3 color2, vec3 color1, float fraction) {
+    return (color2 - color1) * fraction + color1;
+}
+
+vec3 getColorFromHeight(float h) {
+    float total = 0;
+    for (int i = 0; i < 6; i++) {
+       total += WEIGHTS[i];
+       if(total >= h) {
+            return interpolate(COLORS[i], COLORS[i+1], (total - h)/(total - WEIGHTS[i-1]));
+        }
+    }
+
+    return COLORS[6];
+}
 
 void main() {
     float float_x = fragPos.x * (res-1);
@@ -37,5 +71,5 @@ void main() {
 
     float n = tl * (1-delta_x) * (1-delta_y) + tr * delta_x * (1-delta_y) + bl * (1-delta_x) * delta_y + br * delta_x * delta_y;
 
-    outColor = vec4(n, n, n, 1.0);
+    outColor = vec4(getColorFromHeight(n), 1.0);
 }
